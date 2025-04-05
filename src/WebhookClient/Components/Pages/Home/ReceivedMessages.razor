@@ -1,10 +1,12 @@
 ﻿@inject HooksRepository HooksRepository
 @implements IDisposable
 
+@* 当数据正在加载时显示加载提示 *@
 @if (messages is null)
 {
-    <div class="grid-placeholder">Loading...</div>
+    <div class="grid-placeholder">加载中...</div>
 }
+@* 当有消息数据时显示数据网格 *@
 else if (messages.Any())
 {
     <QuickGrid Items="@messages">
@@ -13,42 +15,63 @@ else if (messages.Any())
         <PropertyColumn Sortable="@true" Title="Token" Property="@(hook => hook.Token)" />
     </QuickGrid>
 }
+@* 当没有消息数据时显示提示信息 *@
 else
 {
     <div class="grid-placeholder">
-        <div>None yet received</div>
+        <div>尚未收到</div>
     </div>
-    <p>Webhook messages will appear once a webhook is registered and an order transitions into "paid" status.</p>
+    <p>注册 Webhook 并且订单转换为“已付款”状态后，将显示 Webhook 消息。</p>
 }
 
 @code {
+    // 存储从仓库获取的WebHook消息
     private IQueryable<WebHookReceived>? messages;
+    // 存储对HooksRepository的订阅，以便在组件销毁时取消订阅
     private IDisposable? subscription;
 
+    /// <summary>
+    /// 组件初始化时执行的操作
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
+        // 订阅仓库的更新通知，当有新消息时会触发回调
         subscription = HooksRepository.Subscribe(() => InvokeAsync(OnMessageReceivedAsync));
+        // 初始加载数据
         await RefreshDataAsync();
     }
 
+    /// <summary>
+    /// 从仓库刷新WebHook消息数据
+    /// </summary>
     private async Task RefreshDataAsync()
         => messages = (await HooksRepository.GetAll()).AsQueryable();
 
+    /// <summary>
+    /// 当接收到新的WebHook消息时触发的回调方法
+    /// </summary>
     private async Task OnMessageReceivedAsync()
     {
         try
         {
+            // 刷新数据
             await RefreshDataAsync();
+            // 通知Blazor组件状态已更改，需要重新渲染
             StateHasChanged();
         }
         catch (Exception ex)
         {
+            // 处理异常
             await DispatchExceptionAsync(ex);
         }
     }
 
+    /// <summary>
+    /// 组件销毁时释放资源
+    /// </summary>
     public void Dispose()
     {
+        // 取消对HooksRepository的订阅
         subscription?.Dispose();
     }
 }

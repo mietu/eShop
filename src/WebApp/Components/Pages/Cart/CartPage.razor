@@ -5,27 +5,30 @@
 @attribute [StreamRendering]
 @attribute [Authorize]
 
-<PageTitle>Shopping Bag | AdventureWorks</PageTitle>
-<SectionContent SectionName="page-header-title">Shopping bag</SectionContent>
+@* 购物车页面实现 - 显示用户选择的商品、数量和总价，并允许用户更新数量或继续购物 *@
+<PageTitle>购物车 | AdventureWorks</PageTitle>
+<SectionContent SectionName="page-header-title">购物车</SectionContent>
 
 <div class='cart'>
+    @* 购物车为空或正在加载时的处理 *@
     @if (basketItems is null)
     {
-        <p>Loading...</p>
+        <p>加载中。。。</p>
     }
     else if (basketItems.Count == 0)
     {
         <p>
-            Your shopping bag is empty. <a href="">Continue shopping.</a>
+            您的购物车是空的. <a href="">继续购物.</a>
         </p>
     }
     else
     {
+        @* 购物车商品列表区域 *@
         <div class='cart-items'>
             <div class='cart-item-header'>
-                <div class='catalog-item-info'>Products</div>
-                <div class='catalog-item-quantity'>Quantity</div>
-                <div class='catalog-item-total'>Total</div>
+                <div class='catalog-item-info'>产品</div>
+                <div class='catalog-item-quantity'>数量</div>
+                <div class='catalog-item-total'>总数</div>
             </div>
             @foreach (var item in basketItems)
             {
@@ -38,6 +41,7 @@
                             <p class="price">$@item.UnitPrice.ToString("0.00")</p>
                         </div>
                     </div>
+                    @* 商品数量更新表单 *@
                     <div class="catalog-item-quantity">
                         <form method="post" data-enhance>
                             <input type="hidden" name="_handler" value="update-cart" />
@@ -58,54 +62,83 @@
             }
         </div>
        
-
+        @* 购物车摘要区域 - 显示总数量、总价和操作按钮 *@
         <div class="cart-summary">
             <div class="cart-summary-container">
                 <div class="cart-summary-header">
                     <img role="presentation" src="icons/cart.svg" />
-                    Your shopping bag
+                    你的购物车
                     <span class="filter-badge">@TotalQuantity</span>
                 </div>
                 <div class="cart-summary-total">
-                    <div>Total</div>
+                    <div>总数</div>
                     <div>$@TotalPrice?.ToString("0.00")</div>
                 </div>
-                <a href="checkout" class="button button-primary">Check out</a>
+                <a href="checkout" class="button button-primary">查看</a>
                 <a href="" class="cart-summary-link">
                     <img role="presentation" src="icons/arrow-left.svg" />
-                    <p>Continue shopping</p>
+                    <p>继续购物</p>
                 </a>
             </div>
         </div>
     }
 </div>
 
+@* 处理数量更新的表单目标 *@
 <form @formname="update-cart" @onsubmit="@UpdateQuantityAsync"></form>
 
 @code {
+    /// <summary>
+    /// 购物车中的商品集合
+    /// </summary>
     private IReadOnlyCollection<BasketItem>? basketItems;
 
+    /// <summary>
+    /// 要更新数量的商品ID，从表单提交中获取
+    /// </summary>
     [SupplyParameterFromForm]
     public int? UpdateQuantityId { get; set; }
 
+    /// <summary>
+    /// 更新的商品数量值，从表单提交中获取
+    /// </summary>
     [SupplyParameterFromForm]
     public int? UpdateQuantityValue { get; set; }
 
+    /// <summary>
+    /// 页面初始化时加载购物车商品
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         basketItems = await Basket.GetBasketItemsAsync();
     }
 
+    /// <summary>
+    /// 计算购物车中所有商品的总价
+    /// </summary>
     private decimal? TotalPrice => basketItems?.Sum(i => i.Quantity * i.UnitPrice);
+    
+    /// <summary>
+    /// 计算购物车中所有商品的总数量
+    /// </summary>
     private decimal? TotalQuantity => basketItems?.Sum(i => i.Quantity);
 
-    // While an update post is in process, we want to show the pending quantity, not the one
-    // that is committed to the cart (otherwise the UI briefly shows the old data)
+    /// <summary>
+    /// 获取商品的当前显示数量
+    /// 在数量更新过程中显示用户输入的新数量，而不是购物车中的实际数量
+    /// 这样可以避免在处理更新时UI短暂显示旧数据
+    /// </summary>
+    /// <param name="productId">商品ID</param>
+    /// <param name="cartQuantity">购物车中的实际数量</param>
+    /// <returns>当前应显示的数量</returns>
     private int CurrentOrPendingQuantity(int productId, int cartQuantity)
         => UpdateQuantityId.GetValueOrDefault(-1) == productId
         ? UpdateQuantityValue!.Value
         : cartQuantity;
 
+    /// <summary>
+    /// 更新商品数量的异步处理方法
+    /// </summary>
     private async Task UpdateQuantityAsync()
     {
         var id = UpdateQuantityId!.Value;

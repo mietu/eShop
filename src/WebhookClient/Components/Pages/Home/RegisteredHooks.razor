@@ -1,27 +1,41 @@
-﻿@inject WebhooksClient WebhooksClient
+﻿@* 注入 WebhooksClient 服务以获取 webhook 数据 *@
+@inject WebhooksClient WebhooksClient 
 
 @if (webhooks is null)
 {
+    @* 数据尚未加载完成时显示加载提示 *@
     <div class="grid-placeholder">Loading...</div>
 }
 else if (webhooks.Any())
 {
+    @* 使用 QuickGrid 组件展示已注册的 webhook 列表 *@
     <QuickGrid Items="@webhooks">
+        @* 日期列 - 默认排序列，降序排列 *@
         <PropertyColumn Sortable="@true" IsDefaultSortColumn="true" InitialSortDirection="@SortDirection.Descending" Title="Date" Property="@(hook => hook.Date)" />
+        @* 目标 URL 列 - 可排序 *@
         <PropertyColumn Sortable="@true" Title="Destination" Property="@(hook => hook.DestUrl)" />
+        @* 令牌列 - 可排序 *@
         <PropertyColumn Sortable="@true" Title="Token" Property="@(hook => hook.Token)" />
     </QuickGrid>
 }
 else
 {
-    <div class="grid-placeholder">None registered</div>
+    @* 没有已注册的 webhook 时显示提示信息 *@
+    <div class="grid-placeholder">未注册</div>
 }
 
 @code {
+    /// <summary>
+    /// 存储已注册的 webhook 列表，以支持 QuickGrid 的排序功能
+    /// </summary>
     IQueryable<WebhookResponse>? webhooks;
 
+    /// <summary>
+    /// 组件初始化时加载 webhook 数据
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
+        // 从 WebhooksClient 服务获取数据并转换为 IQueryable 以支持 QuickGrid 的查询功能
         webhooks = (await WebhooksClient.LoadWebhooks()).AsQueryable();
     }
 }

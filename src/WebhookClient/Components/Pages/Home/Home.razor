@@ -1,22 +1,33 @@
-﻿@page "/"
-@using Microsoft.AspNetCore.Components.Authorization
+﻿@* 将此组件设置为应用程序的根路由 *@
+@page "/" 
+@* 导入授权组件命名空间 *@
+@using Microsoft.AspNetCore.Components.Authorization 
 
-<PageTitle>Order management</PageTitle>
+@* 设置页面标题 *@
+<PageTitle>订单管理</PageTitle> 
 
-<h2>Registered webhooks</h2>
+@* 已注册的webhook标题 *@
+<h2>已注册的webhooks</h2> 
 
+@* 授权视图组件 - 根据用户认证状态显示不同内容 *@
 <AuthorizeView>
     <Authorized>
+        @* 已授权用户可以看到的内容 *@
+        @* 显示已注册的webhook列表组件 *@
         <RegisteredHooks />
-        <a class="action" href="add-webhook">Add webhook registration</a>
+        @* 添加新webhook的链接 *@
+        <a class="action" href="add-webhook">添加 Webhook 注册</a> 
     </Authorized>
     <NotAuthorized>
+        @* 未授权用户看到的内容 *@
         <div class="grid-placeholder">
-            Log in to view or edit webhook registrations
+            登录以查看或编辑 Webhook 注册
         </div>
     </NotAuthorized>
 </AuthorizeView>
 
-<h2>Webhook messages received (orders paid)</h2>
+@* 已接收webhook消息的标题 *@
+<h2>收到的 Webhook 消息数（已支付的订单数）</h2> 
 
-<ReceivedMessages />
+@* 显示接收到的webhook消息组件 *@
+<ReceivedMessages /> 

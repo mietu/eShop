@@ -8,93 +8,135 @@
 @if (item is not null)
 {
     <PageTitle>@item.Name | AdventureWorks</PageTitle>
+    <!-- 页面标题区域 -->
     <SectionContent SectionName="page-header-title">@item.Name</SectionContent>
     <SectionContent SectionName="page-header-subtitle">@item.CatalogBrand?.Brand</SectionContent>
 
+    <!-- 商品详情区域 -->
     <div class="item-details">
+        <!-- 商品图片 -->
         <img alt="@item.Name" src="@ProductImages.GetProductImageUrl(item)" />
         <div class="description">
+            <!-- 商品描述和品牌信息 -->
             <p>@item.Description</p>
             <p>
-                Brand: <strong>@item.CatalogBrand?.Brand</strong>
+                品牌: <strong>@item.CatalogBrand?.Brand</strong>
             </p>
+            <!-- 添加到购物车表单 -->
             <form class="add-to-cart" method="post" @formname="add-to-cart" @onsubmit="@AddToCartAsync" data-enhance="@isLoggedIn">
                 <AntiforgeryToken />
                 <span class="price">$@item.Price.ToString("0.00")</span>
 
                 @if (isLoggedIn)
                 {
+                    <!-- 已登录用户显示添加到购物车按钮 -->
                     <button type="submit" title="Add to basket">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
                             <path id="Vector" d="M6 2L3 6V20C3 20.5304 3.21071 21.0391 3.58579 21.4142C3.96086 21.7893 4.46957 22 5 22H19C19.5304 22 20.0391 21.7893 20.4142 21.4142C20.7893 21.0391 21 20.5304 21 20V6L18 2H6Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                             <path id="Vector_2" d="M3 6H21" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                             <path id="Vector_3" d="M16 10C16 11.0609 15.5786 12.0783 14.8284 12.8284C14.0783 13.5786 13.0609 14 12 14C10.9391 14 9.92172 13.5786 9.17157 12.8284C8.42143 12.0783 8 11.0609 8 10" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
-                        Add to shopping bag
+                        添加至购物车
                     </button>
                 }
                 else
                 {
-                    <button type="submit" title="Log in to purchase">
+                    <!-- 未登录用户显示登录按钮 -->
+                    <button type="submit" title="登录购买">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
                             <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                             <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
-                        Log in to purchase
+                       登录购买
                     </button>
                 }
             </form>
 
+            <!-- 显示购物车中此商品的数量 -->
             @if (numInCart > 0)
             {
-                <p><strong>@numInCart</strong> in <a href="cart">shopping bag</a></p>
+                <p><strong>@numInCart</strong> in <a href="cart">购物车</a></p>
             }
         </div>
     </div>
 }
 else if (notFound)
 {
-    <SectionContent SectionName="page-header-title">Not found</SectionContent>
+    <!-- 商品未找到时显示的错误信息 -->
+    <SectionContent SectionName="page-header-title">未找到</SectionContent>
     <div class="item-details">
-        <p>Sorry, we couldn't find any such product.</p>
+        <p>很抱歉，我们找不到任何此类产品。</p>
     </div>
 }
 
 @code {
+    /// <summary>
+    /// 当前显示的商品信息
+    /// </summary>
     private CatalogItem? item;
+    
+    /// <summary>
+    /// 用户购物车中此商品的数量
+    /// </summary>
     private int numInCart;
+    
+    /// <summary>
+    /// 用户是否已登录
+    /// </summary>
     private bool isLoggedIn;
+    
+    /// <summary>
+    /// 商品是否未找到标志
+    /// </summary>
     private bool notFound;
 
+    /// <summary>
+    /// 从URL路由获取的商品ID
+    /// </summary>
     [Parameter]
     public int ItemId { get; set; }
 
+    /// <summary>
+    /// HTTP上下文，用于检查用户登录状态和设置响应状态码
+    /// </summary>
     [CascadingParameter]
     public HttpContext? HttpContext { get; set; }
 
+    /// <summary>
+    /// 页面初始化时加载商品信息和购物车状态
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         try
         {
+            // 检查用户是否已登录
             isLoggedIn = HttpContext?.User.Identity?.IsAuthenticated == true;
+            // 获取商品详情
             item = await CatalogService.GetCatalogItem(ItemId);
+            // 更新购物车中此商品的数量
             await UpdateNumInCartAsync();
         }
         catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
         {
+            // 如果商品不存在，设置404状态码和notFound标志
             HttpContext!.Response.StatusCode = 404;
             notFound = true;
         }
     }
 
+    /// <summary>
+    /// 将商品添加到购物车的处理方法
+    /// </summary>
     private async Task AddToCartAsync()
     {
+        // 未登录用户重定向到登录页面
         if (!isLoggedIn)
         {
             Nav.NavigateTo(Pages.User.LogIn.Url(Nav));
             return;
         }
 
+        // 添加商品到购物车并更新购物车计数
         if (item is not null)
         {
             await BasketState.AddAsync(item);
@@ -102,6 +144,9 @@ else if (notFound)
         }
     }
 
+    /// <summary>
+    /// 更新购物车中当前商品的数量
+    /// </summary>
     private async Task UpdateNumInCartAsync()
     {
         var items = await BasketState.GetBasketItemsAsync();

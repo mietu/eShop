@@ -1,36 +1,41 @@
-﻿@page "/Error"
+﻿@* 定义此组件的路由 *@
+@page "/Error"
+@* 引入用于获取活动ID的命名空间 *@
 @using System.Diagnostics
 
-<PageTitle>Error</PageTitle>
+<PageTitle>错误</PageTitle> @* 设置浏览器标题为"Error" *@
 
-<h1 class="text-danger">Error.</h1>
-<h2 class="text-danger">An error occurred while processing your request.</h2>
+@* 错误标题和说明 *@
+<h1 class="text-danger">错误。</h1>
+<h2 class="text-danger">处理您的请求时出错。</h2>
 
+@* 条件性显示请求ID，仅当RequestId有值时显示 *@
 @if (ShowRequestId)
 {
     <p>
-        <strong>Request ID:</strong> <code>@RequestId</code>
+        <strong>请求ID:</strong> <code>@RequestId</code>
     </p>
 }
 
-<h3>Development Mode</h3>
+@* 开发环境相关信息 *@
+<h3>开发模式</h3>
 <p>
-    Swapping to <strong>Development</strong> environment will display more detailed information about the error that occurred.
+    切换至 <strong>开发环境</strong> 将显示有关所发生错误的更多详细信息。
 </p>
 <p>
-    <strong>The Development environment shouldn't be enabled for deployed applications.</strong>
-    It can result in displaying sensitive information from exceptions to end users.
-    For local debugging, enable the <strong>Development</strong> environment by setting the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>
-    and restarting the app.
+    <strong>不应为已部署的应用程序启用 Development environment （开发环境）。</strong>
+    它可能导致向最终用户显示来自异常的敏感信息。
+    用于本地调试, 通过设置 <strong>ASPNETCORE_ENVIRONMENT</strong> 启用 <strong>开发环境</strong> 环境变量为 <strong>Development</strong>
+    并重新启动应用程序。
 </p>
 
 @code{
     [CascadingParameter]
-    private HttpContext? HttpContext { get; set; }
+    private HttpContext? HttpContext { get; set; } @* 通过级联参数获取当前HTTP上下文 *@
 
-    private string? RequestId { get; set; }
-    private bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
+    private string? RequestId { get; set; } @* 存储请求ID *@
+    private bool ShowRequestId => !string.IsNullOrEmpty(RequestId); @* 判断是否显示请求ID的属性 *@
 
     protected override void OnInitialized() =>
-        RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
+        RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier; @* 组件初始化时，从当前活动或HTTP上下文中获取请求ID *@
 }

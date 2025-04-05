@@ -1,22 +1,36 @@
-﻿@rendermode @(new InteractiveServerRenderMode(prerender: false))
-@using Microsoft.AspNetCore.Components.Authorization
-@using Microsoft.Extensions.AI
-@using eShop.WebApp.Chatbot
+﻿@* 定义为交互式服务端渲染模式，禁用预渲染 *@
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@* 引入认证相关命名空间 *@
+@using Microsoft.AspNetCore.Components.Authorization 
+@* 引入AI扩展命名空间 *@
+@using Microsoft.Extensions.AI 
+@* 引入聊天机器人相关命名空间 *@
+@using eShop.WebApp.Chatbot 
+@* 注入JavaScript运行时服务 *@
 @inject IJSRuntime JS
-@inject NavigationManager Nav
+@* 注入导航管理器服务 *@
+@inject NavigationManager Nav 
+@* 注入商品目录服务 *@
 @inject CatalogService CatalogService
+@* 注入产品图片URL提供器服务 *@
 @inject IProductImageUrlProvider ProductImages
-@inject BasketState BasketState
+@* 注入购物篮状态服务 *@
+@inject BasketState BasketState 
+@* 注入认证状态提供器服务 *@
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@inject ILoggerFactory LoggerFactory
+@* 注入日志工厂服务 *@
+@inject ILoggerFactory LoggerFactory 
+@* 注入服务提供者 *@
 @inject IServiceProvider ServiceProvider
 
 <div class="floating-pane">
-    <a href="@Nav.GetUriWithQueryParameter("chat", (string?)null)" class="hide-chatbot" title="Close .NET Concierge"><span>✖</span></a>
+    @* 关闭聊天机器人的链接，点击时从URL移除chat参数 *@
+    <a href="@Nav.GetUriWithQueryParameter("chat", (string?)null)" class="hide-chatbot" title="关闭 .NET Concierge"><span>✖</span></a>
 
     <div class="chatbot-chat" @ref="chat">
         @if (chatState is not null)
         {
+            @* 遍历并显示所有聊天消息（仅显示助手和用户的消息） *@
             foreach (var message in chatState.Messages.Where(m => m.Role == ChatRole.Assistant || m.Role == ChatRole.User))
             {
                 if (!string.IsNullOrEmpty(message.Text))
@@ -27,65 +41,89 @@
         }
         else if (missingConfiguration)
         {
-            <p class="message message-assistant"><strong>The chatbot is missing required configuration.</strong> Please set 'useOpenAI = true' in eShop.AppHost/Program.cs. You'll need an API key or an Azure Subscription to enable AI features.</p>
+            @* 显示配置缺失的提示信息 *@
+            <p class="message message-assistant"><strong>聊天机器人缺少所需的配置。</strong> 请在 Shop.App Host/Program.cs 中设置 'use Open AI = true'。需要 API 密钥或 Azure 订阅才能启用 AI 功能。</p>
         }
 
         @if (thinking)
         {
-            <p class="thinking">Thinking...</p>
+            @* 显示正在思考的指示器 *@
+            <p class="thinking">思考中...</p>
         }
     </div>
 
     <form class="chatbot-input" @onsubmit="SendMessageAsync">
-        <textarea placeholder="Start chatting..." @ref="@textbox" @bind="messageToSend"></textarea>
-        <button type="submit" title="Send" disabled="@(chatState is null)">Send</button>
+        @* 聊天输入框和发送按钮 *@
+        <textarea placeholder="开始聊天..." @ref="@textbox" @bind="messageToSend"></textarea>
+        <button type="submit" title="发送" disabled="@(chatState is null)">发送</button>
     </form>
 </div>
 
 @code {
-    bool missingConfiguration;
-    ChatState? chatState;
-    ElementReference textbox;
-    ElementReference chat;
-    string? messageToSend;
-    bool thinking;
-    IJSObjectReference? jsModule;
+    bool missingConfiguration; // 标记是否缺少必要配置
+    ChatState? chatState; // 聊天状态管理对象
+    ElementReference textbox; // 文本输入框的引用
+    ElementReference chat; // 聊天窗口的引用
+    string? messageToSend; // 要发送的消息文本
+    bool thinking; // 标记是否正在处理/思考
+    IJSObjectReference? jsModule; // JavaScript模块引用
 
+    /// <summary>
+    /// 组件初始化时执行
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
+        // 尝试获取聊天客户端服务
         var client = ServiceProvider.GetService<IChatClient>();
         if (client is not null)
         {
+            // 获取当前用户的认证状态
             AuthenticationState auth = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            // 初始化聊天状态对象
             chatState = new ChatState(CatalogService, BasketState, auth.User, ProductImages, LoggerFactory, client);
         }
         else
         {
+            // 标记缺少配置
             missingConfiguration = true;
         }
     }
 
+    /// <summary>
+    /// 发送消息的处理方法
+    /// </summary>
     private async Task SendMessageAsync()
     {
+        // 复制并清理消息文本
         var messageCopy = messageToSend?.Trim();
         messageToSend = null;
 
         if (chatState is not null && !string.IsNullOrEmpty(messageCopy))
         {
+            // 标记为正在思考状态
             thinking = true;
+            // 添加用户消息并在消息添加时更新UI
             await chatState.AddUserMessageAsync(messageCopy, onMessageAdded: StateHasChanged);
             thinking = false;
         }
     }
 
+    /// <summary>
+    /// 组件渲染后执行的方法
+    /// </summary>
+    /// <param name="firstRender">是否是首次渲染</param>
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        // 懒加载JavaScript模块
         jsModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Chatbot/Chatbot.razor.js");
+        // 滚动到聊天窗口底部
         await jsModule.InvokeVoidAsync("scrollToEnd", chat);
 
         if (firstRender)
         {
+            // 首次渲染时，聚焦到文本输入框
             await textbox.FocusAsync();
+            // 设置按Enter键提交表单的功能
             await jsModule.InvokeVoidAsync("submitOnEnter", textbox);
         }
     }

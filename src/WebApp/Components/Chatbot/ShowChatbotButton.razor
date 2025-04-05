@@ -1,13 +1,18 @@
 ﻿@inject NavigationManager Nav
 
-<a class="show-chatbot" href="@Nav.GetUriWithQueryParameter("chat", true)" title="Show chatbot"></a>
+<!-- 此链接在点击时会添加 chat=true 查询参数，用于显示聊天机器人 -->
+<a class="show-chatbot" href="@Nav.GetUriWithQueryParameter("chat", true)" title="显示聊天机器人"></a>
 
+<!-- 当 ShowChat 为 true 时，渲染 Chatbot 组件 -->
 @if (ShowChat)
 {
     <Chatbot />
 }
 
 @code {
+    /// <summary>
+    /// 从 URL 查询参数 "chat" 获取值，用于控制聊天机器人的显示状态
+    /// </summary>
     [SupplyParameterFromQuery(Name = "chat")]
     public bool ShowChat { get; set; }
 }

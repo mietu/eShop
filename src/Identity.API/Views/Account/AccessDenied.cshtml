@@ -1,7 +1,18 @@
+@{
+    // 访问被拒绝视图 - 当用户尝试访问他们没有权限的资源时显示
+    ViewData["Title"] = "访问被拒绝";
+}
 
-<div class="container">
-    <div class="lead">
-        <h1>Access Denied</h1>
-        <p>You do not have access to that resource.</p>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h1 class="text-danger">访问被拒绝</h1>
+                    <p class="lead">您没有访问该资源的权限。</p>
+                    <a class="btn btn-primary" href="/">返回首页</a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

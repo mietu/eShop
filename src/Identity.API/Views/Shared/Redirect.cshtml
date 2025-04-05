@@ -1,5 +1,6 @@
 @model RedirectViewModel
 
+@* 重定向页面的主要内容区域 *@
 <div class="redirect-page">
     <div class="lead">
         <h1>You are now being returned to the application</h1>
@@ -7,5 +8,11 @@
     </div>
 </div>
 
+@* 
+    使用meta标签自动重定向到指定URL
+    data-url属性用于JavaScript中获取重定向目标
+*@
 <meta http-equiv="refresh" content="0;url=@Model.RedirectUrl" data-url="@Model.RedirectUrl">
+
+@* 引用重定向相关的JavaScript文件，可能包含重定向逻辑或处理重定向过程中的特殊情况 *@
 <script src="~/js/signin-redirect.js"></script>

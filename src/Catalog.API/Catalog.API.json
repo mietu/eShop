@@ -11,14 +11,14 @@
         "tags": [
           "Items"
         ],
-        "summary": "Batch get catalog items",
-        "description": "Get multiple items from the catalog",
+        "summary": "批量获取商品",
+        "description": "从目录中获取多个商品",
         "operationId": "BatchGetItems",
         "parameters": [
           {
             "name": "ids",
             "in": "query",
-            "description": "List of ids for catalog items to return",
+            "description": "要返回的商品ID列表",
             "schema": {
               "type": "array",
               "items": {
@@ -70,14 +70,14 @@
         "tags": [
           "Items"
         ],
-        "summary": "Get catalog item",
-        "description": "Get an item from the catalog",
+        "summary": "获取商品",
+        "description": "从目录中获取一个商品",
         "operationId": "GetItem",
         "parameters": [
           {
             "name": "id",
             "in": "path",
-            "description": "The catalog item id",
+            "description": "商品ID",
             "required": true,
             "schema": {
               "type": "integer",
@@ -125,14 +125,14 @@
         "tags": [
           "Catalog"
         ],
-        "summary": "Delete catalog item",
-        "description": "Delete the specified catalog item",
+        "summary": "删除商品",
+        "description": "删除指定的商品",
         "operationId": "DeleteItem",
         "parameters": [
           {
             "name": "id",
             "in": "path",
-            "description": "The id of the catalog item to delete",
+            "description": "要删除的商品ID",
             "required": true,
             "schema": {
               "type": "integer",
@@ -165,14 +165,14 @@
         "tags": [
           "Items"
         ],
-        "summary": "Get catalog item picture",
-        "description": "Get the picture for a catalog item",
+        "summary": "获取商品图片",
+        "description": "获取商品的图片",
         "operationId": "GetItemPicture",
         "parameters": [
           {
             "name": "id",
             "in": "path",
-            "description": "The catalog item id",
+            "description": "商品ID",
             "required": true,
             "schema": {
               "type": "integer",
@@ -267,8 +267,8 @@
         "tags": [
           "Types"
         ],
-        "summary": "List catalog item types",
-        "description": "Get a list of the types of catalog items",
+        "summary": "列出商品类型",
+        "description": "获取商品类型列表",
         "operationId": "ListItemTypes",
         "parameters": [
           {
@@ -314,8 +314,8 @@
         "tags": [
           "Brands"
         ],
-        "summary": "List catalog item brands",
-        "description": "Get a list of the brands of catalog items",
+        "summary": "列出商品品牌",
+        "description": "获取商品品牌列表",
         "operationId": "ListItemBrands",
         "parameters": [
           {
@@ -361,8 +361,8 @@
         "tags": [
           "Catalog"
         ],
-        "summary": "Create a catalog item",
-        "description": "Create a new item in the catalog",
+        "summary": "创建商品",
+        "description": "在目录中创建新商品",
         "operationId": "CreateItem",
         "parameters": [
           {
@@ -405,14 +405,14 @@
         "tags": [
           "Items"
         ],
-        "summary": "List catalog items",
-        "description": "Get a paginated list of items in the catalog.",
+        "summary": "列出商品",
+        "description": "获取目录中商品的分页列表。",
         "operationId": "ListItems",
         "parameters": [
           {
             "name": "PageSize",
             "in": "query",
-            "description": "Number of items to return in a single page of results",
+            "description": "在单个结果页中返回的项目数",
             "schema": {
               "type": "integer",
               "format": "int32",
@@ -422,7 +422,7 @@
           {
             "name": "PageIndex",
             "in": "query",
-            "description": "The index of the page of results to return",
+            "description": "要返回的结果页的索引",
             "schema": {
               "type": "integer",
               "format": "int32",
@@ -467,8 +467,8 @@
         "tags": [
           "Items"
         ],
-        "summary": "Create or replace a catalog item",
-        "description": "Create or replace a catalog item",
+        "summary": "创建或替换商品",
+        "description": "创建或替换商品",
         "operationId": "UpdateItem",
         "parameters": [
           {
@@ -523,14 +523,14 @@
         "tags": [
           "Items"
         ],
-        "summary": "Get catalog items by name",
-        "description": "Get a paginated list of catalog items with the specified name.",
+        "summary": "按名称获取商品",
+        "description": "获取具有指定名称的商品的分页列表。",
         "operationId": "GetItemsByName",
         "parameters": [
           {
             "name": "PageSize",
             "in": "query",
-            "description": "Number of items to return in a single page of results",
+            "description": "在单个结果页中返回的项目数",
             "schema": {
               "type": "integer",
               "format": "int32",
@@ -540,7 +540,7 @@
           {
             "name": "PageIndex",
             "in": "query",
-            "description": "The index of the page of results to return",
+            "description": "要返回的结果页的索引",
             "schema": {
               "type": "integer",
               "format": "int32",
@@ -550,7 +550,7 @@
           {
             "name": "name",
             "in": "path",
-            "description": "The name of the item to return",
+            "description": "要返回的商品名称",
             "required": true,
             "schema": {
               "minLength": 1,
@@ -597,14 +597,14 @@
         "tags": [
           "Search"
         ],
-        "summary": "Search catalog for relevant items",
-        "description": "Search the catalog for items related to the specified text",
+        "summary": "搜索相关商品",
+        "description": "搜索与指定文本相关的商品",
         "operationId": "GetRelevantItems",
         "parameters": [
           {
             "name": "PageSize",
             "in": "query",
-            "description": "Number of items to return in a single page of results",
+            "description": "在单个结果页中返回的项目数",
             "schema": {
               "type": "integer",
               "format": "int32",
@@ -614,7 +614,7 @@
           {
             "name": "PageIndex",
             "in": "query",
-            "description": "The index of the page of results to return",
+            "description": "要返回的结果页的索引",
             "schema": {
               "type": "integer",
               "format": "int32",
@@ -624,7 +624,7 @@
           {
             "name": "text",
             "in": "path",
-            "description": "The text string to use when search for related items in the catalog",
+            "description": "用于搜索目录中相关商品的文本字符串",
             "required": true,
             "schema": {
               "minLength": 1,
@@ -671,14 +671,14 @@
         "tags": [
           "Types"
         ],
-        "summary": "Get catalog items by type and brand",
-        "description": "Get catalog items of the specified type and brand",
+        "summary": "按类型和品牌获取商品",
+        "description": "获取指定类型和品牌的商品",
         "operationId": "GetItemsByTypeAndBrand",
         "parameters": [
           {
             "name": "PageSize",
             "in": "query",
-            "description": "Number of items to return in a single page of results",
+            "description": "在单个结果页中返回的项目数",
             "schema": {
               "type": "integer",
               "format": "int32",
@@ -688,7 +688,7 @@
           {
             "name": "PageIndex",
             "in": "query",
-            "description": "The index of the page of results to return",
+            "description": "要返回的结果页的索引",
             "schema": {
               "type": "integer",
               "format": "int32",
@@ -698,7 +698,7 @@
           {
             "name": "typeId",
             "in": "path",
-            "description": "The type of items to return",
+            "description": "要返回的商品类型",
             "required": true,
             "schema": {
               "type": "integer",
@@ -708,7 +708,7 @@
           {
             "name": "brandId",
             "in": "path",
-            "description": "The brand of items to return",
+            "description": "要返回的商品品牌",
             "required": true,
             "schema": {
               "type": "integer",
@@ -755,14 +755,14 @@
         "tags": [
           "Brands"
         ],
-        "summary": "List catalog items by brand",
-        "description": "Get a list of catalog items for the specified brand",
+        "summary": "按品牌列出商品",
+        "description": "获取指定品牌的商品列表",
         "operationId": "GetItemsByBrand",
         "parameters": [
           {
             "name": "PageSize",
             "in": "query",
-            "description": "Number of items to return in a single page of results",
+            "description": "在单个结果页中返回的项目数",
             "schema": {
               "type": "integer",
               "format": "int32",
@@ -772,7 +772,7 @@
           {
             "name": "PageIndex",
             "in": "query",
-            "description": "The index of the page of results to return",
+            "description": "要返回的结果页的索引",
             "schema": {
               "type": "integer",
               "format": "int32",
@@ -782,7 +782,7 @@
           {
             "name": "brandId",
             "in": "path",
-            "description": "The brand of items to return",
+            "description": "要返回的商品品牌",
             "required": true,
             "schema": {
               "type": "integer",

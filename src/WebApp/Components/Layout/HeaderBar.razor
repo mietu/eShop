@@ -1,6 +1,11 @@
 ﻿@using Microsoft.AspNetCore.Components.Endpoints
 
+@* 
+ * HeaderBar组件 - 网站的顶部导航栏和标题区域
+ * 根据当前页面类型(是否为目录页)调整显示样式
+ *@
 <div class="eshop-header @(IsCatalog? "home" : "")">
+    @* 顶部横幅图像区域，根据页面类型显示不同的背景图 *@
     <div class="eshop-header-hero">
         @{
             var headerImage = IsCatalog ? "images/header-home.webp" : "images/header.webp";
@@ -8,14 +13,18 @@
         <img role="presentation" src="@headerImage" />
     </div>
     <div class="eshop-header-container">
+        @* 导航栏区域 - 包含Logo、用户菜单和购物车菜单 *@
         <nav class="eshop-header-navbar">
             <a class="logo logo-header" href="">
                 <img alt="AdventureWorks" src="images/logo-header.svg" class="logo logo-header" />
             </a>
             
+            @* 用户相关功能菜单组件 *@
             <UserMenu />
+            @* 购物车功能菜单组件 *@
             <CartMenu />
         </nav>
+        @* 页面标题区域 - 使用SectionOutlet组件展示页面特定的标题和副标题 *@
         <div class="eshop-header-intro">
             <h1><SectionOutlet SectionName="page-header-title" /></h1>
             <p><SectionOutlet SectionName="page-header-subtitle" /></p>
@@ -24,10 +33,21 @@
 </div>
 
 @code {
+    /// <summary>
+    /// HttpContext级联参数，用于获取当前请求的上下文信息
+    /// </summary>
     [CascadingParameter]
     public HttpContext? HttpContext { get; set; }
 
-    // We can use Endpoint Metadata to determine the page currently being visited
+    /// <summary>
+    /// 获取当前页面的组件类型
+    /// 通过Endpoint元数据获取正在访问的页面组件信息
+    /// </summary>
     private Type? PageComponentType => HttpContext?.GetEndpoint()?.Metadata.OfType<ComponentTypeMetadata>().FirstOrDefault()?.Type;
+    
+    /// <summary>
+    /// 判断当前页面是否为目录页
+    /// 用于控制不同页面样式的切换
+    /// </summary>
     private bool IsCatalog => PageComponentType == typeof(Pages.Catalog.Catalog);
 }

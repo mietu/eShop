@@ -3,24 +3,30 @@
 <div class="login-page">
     <div class="container">
         <div class="row top-buffer">
-
+            @* 检查是否启用了本地登录 *@
             @if (Model.EnableLocalLogin)
             {
                 <div class="col"></div>
                 <div class="col-sm-6">
+                    @* 登录表单，使用asp-route="Login"路由 *@
                     <form asp-route="Login">
+                        @* 隐藏字段，存储登录成功后的跳转URL *@
                         <input type="hidden" asp-for="ReturnUrl" />
                         <div class="login-container">
                             <h2>Login</h2>
+                            @* 引入验证错误摘要的部分视图 *@
                             <partial name="_ValidationSummary" />
+                            @* 用户名输入区域 *@
                             <div class="form-group">
                                 <label asp-for="Username"></label>
                                 <input class="form-control" placeholder="Username" asp-for="Username" autofocus>
                             </div> 
+                            @* 密码输入区域 *@
                             <div class="form-group">
                                 <label asp-for="Password"></label>
                                 <input type="password" class="form-control" placeholder="Password" asp-for="Password" autocomplete="off">
                             </div>
+                            @* 记住登录选项（如果允许） *@
                             @if (Model.AllowRememberLogin)
                             {
                                 <div class="form-group">
@@ -33,9 +39,11 @@
                                 </div>
                             }
 
+                            @* 默认用户信息提示 *@
                             <div>
                                 <p>The default users are alice/bob, password: Pass123$</p>
                             </div>
+                            @* 登录按钮 *@
                             <button class="btn btn-primary" name="button" value="login">Login</button>
                         </div>
                     </form>

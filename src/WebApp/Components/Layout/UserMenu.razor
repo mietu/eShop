@@ -2,32 +2,46 @@
 @using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Authentication
-@inject LogOutService LogOutService
-@inject NavigationManager Nav
+@* 注入用于处理登出功能的服务 *@
+@inject LogOutService LogOutService 
+@* 注入导航管理器，用于页面导航 *@
+@inject NavigationManager Nav 
 
 <AuthorizeView>
+    <!-- 已授权用户显示的内容 -->
     <Authorized>
+        <!-- 显示当前用户名 -->
         <h3>@context.User.Identity?.Name</h3>
+        <!-- 用户下拉菜单 -->
         <div class="dropdown-menu">
+            <!-- 下拉菜单按钮，使用用户图标 -->
             <span class="dropdown-button"><img role="presentation" src="icons/user.svg" /></span>
+            <!-- 下拉菜单内容 -->
             <div class="dropdown-content">
-                <a class="dropdown-item" href="user/orders">My orders</a>
+                <!-- 我的订单链接 -->
+                <a class="dropdown-item" href="user/orders">我的订单</a>
+                <!-- 登出表单，使用POST方法确保安全登出 -->
                 <form class="dropdown-item" method="post" action="user/logout" @formname="logout" @onsubmit="LogOutAsync">
+                    <!-- 防止跨站请求伪造(CSRF)攻击的令牌 -->
                     <AntiforgeryToken />
-                    <button type="submit">Log out</button>
+                    <button type="submit">退出</button>
                 </form>
             </div>
         </div>
     </Authorized>
+    <!-- 未授权用户显示的内容，仅显示登录链接 -->
     <NotAuthorized>
         <a aria-label="Sign in" href="@Pages.User.LogIn.Url(Nav)"><img role="presentation" src="icons/user.svg" /></a>
     </NotAuthorized>
 </AuthorizeView>
 
 @code {
+    // 级联参数，从父组件接收HttpContext
     [CascadingParameter]
     public HttpContext? HttpContext { get; set; }
 
+    // 处理登出操作的方法
+    // 在表单提交时触发，调用LogOutService进行实际的登出处理
     private Task LogOutAsync()
         => LogOutService.LogOutAsync(HttpContext!);
 }

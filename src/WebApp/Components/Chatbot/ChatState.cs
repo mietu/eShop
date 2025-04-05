@@ -6,16 +6,22 @@ using Microsoft.Extensions.AI;
 
 namespace eShop.WebApp.Chatbot;
 
+/// <summary>
+/// 聊天状态类 - 管理聊天机器人的消息和功能
+/// </summary>
 public class ChatState
 {
-    private readonly ICatalogService _catalogService;
-    private readonly IBasketState _basketState;
-    private readonly ClaimsPrincipal _user;
-    private readonly ILogger _logger;
-    private readonly IProductImageUrlProvider _productImages;
-    private readonly IChatClient _chatClient;
-    private readonly ChatOptions _chatOptions;
+    private readonly ICatalogService _catalogService;        // 目录服务接口
+    private readonly IBasketState _basketState;              // 购物篮状态接口
+    private readonly ClaimsPrincipal _user;                  // 当前用户
+    private readonly ILogger _logger;                        // 日志记录器
+    private readonly IProductImageUrlProvider _productImages; // 商品图片URL提供程序
+    private readonly IChatClient _chatClient;                // 聊天客户端
+    private readonly ChatOptions _chatOptions;               // 聊天选项配置
 
+    /// <summary>
+    /// 构造函数 - 初始化聊天状态并配置AI助手
+    /// </summary>
     public ChatState(
         ICatalogService catalogService,
         IBasketState basketState,
@@ -32,7 +38,7 @@ public class ChatState
 
         if (_logger.IsEnabled(LogLevel.Debug))
         {
-            _logger.LogDebug("ChatModel: {model}", chatClient.GetService<ChatClientMetadata>()?.ModelId);
+            _logger.LogDebug("聊天模型: {model}", chatClient.GetService<ChatClientMetadata>()?.ModelId);
         }
 
         _chatClient = chatClient;
@@ -40,13 +46,14 @@ public class ChatState
         {
             Tools =
             [
-                AIFunctionFactory.Create(GetUserInfo),
-                AIFunctionFactory.Create(SearchCatalog),
-                AIFunctionFactory.Create(AddToCart),
-                AIFunctionFactory.Create(GetCartContents),
+                AIFunctionFactory.Create(GetUserInfo),      // 获取用户信息的工具
+                AIFunctionFactory.Create(SearchCatalog),    // 搜索商品目录的工具
+                AIFunctionFactory.Create(AddToCart),        // 添加商品到购物车的工具
+                AIFunctionFactory.Create(GetCartContents),  // 获取购物车内容的工具
             ],
         };
 
+        // 初始化聊天消息，包含系统指令和初始问候语
         Messages =
         [
             new ChatMessage(ChatRole.System, """
@@ -64,15 +71,23 @@ public class ChatState
         ];
     }
 
+    /// <summary>
+    /// 聊天消息列表 - 存储对话历史记录
+    /// </summary>
     public IList<ChatMessage> Messages { get; }
 
+    /// <summary>
+    /// 添加用户消息并获取AI回复
+    /// </summary>
+    /// <param name="userText">用户输入的文本</param>
+    /// <param name="onMessageAdded">消息添加后的回调函数</param>
     public async Task AddUserMessageAsync(string userText, Action onMessageAdded)
     {
-        // Store the user's message
+        // 存储用户消息
         Messages.Add(new ChatMessage(ChatRole.User, userText));
         onMessageAdded();
 
-        // Get and store the AI's response message
+        // 获取并存储AI的响应消息
         try
         {
             var response = await _chatClient.GetResponseAsync(Messages, _chatOptions);
@@ -85,15 +100,18 @@ public class ChatState
         {
             if (_logger.IsEnabled(LogLevel.Error))
             {
-                _logger.LogError(e, "Error getting chat completions.");
+                _logger.LogError(e, "获取聊天完成时出错。");
             }
-            Messages.Add(new ChatMessage(ChatRole.Assistant, $"My apologies, but I encountered an unexpected error."));
+            Messages.Add(new ChatMessage(ChatRole.Assistant, $"很抱歉，我遇到了一个意外错误。"));
         }
         onMessageAdded();
     }
 
-
-    [Description("Gets information about the chat user")]
+    /// <summary>
+    /// 获取聊天用户的信息
+    /// </summary>
+    /// <returns>序列化的用户信息JSON字符串</returns>
+    [Description("获取有关聊天用户的信息")]
     private string GetUserInfo()
     {
         var claims = _user.Claims;
@@ -110,18 +128,26 @@ public class ChatState
             PhoneNumber = GetValue(claims, "phone_number"),
         });
 
+        // 从Claims集合中获取指定类型的值，如果不存在则返回空字符串
         static string GetValue(IEnumerable<Claim> claims, string claimType) =>
             claims.FirstOrDefault(x => x.Type == claimType)?.Value ?? "";
     }
 
-    [Description("Searches the AdventureWorks catalog for a provided product description")]
-    private async Task<string> SearchCatalog([Description("The product description for which to search")] string productDescription)
+    /// <summary>
+    /// 根据产品描述搜索商品目录
+    /// </summary>
+    /// <param name="productDescription">产品描述关键词</param>
+    /// <returns>序列化的搜索结果JSON字符串</returns>
+    [Description("在 Adventure Works 目录中搜索提供的产品描述")]
+    private async Task<string> SearchCatalog([Description("要搜索的商品描述")] string productDescription)
     {
         try
         {
+            // 调用目录服务进行语义相关性搜索
             var results = await _catalogService.GetCatalogItemsWithSemanticRelevance(0, 8, productDescription!);
             for (int i = 0; i < results.Data.Count; i++)
             {
+                // 为每个商品添加图片URL
                 results.Data[i] = results.Data[i] with { PictureUrl = _productImages.GetProductImageUrl(results.Data[i].Id) };
             }
 
@@ -129,30 +155,40 @@ public class ChatState
         }
         catch (HttpRequestException e)
         {
-            return Error(e, "Error accessing catalog.");
+            return Error(e, "访问目录时出错.");
         }
     }
 
-    [Description("Adds a product to the user's shopping cart.")]
-    private async Task<string> AddToCart([Description("The id of the product to add to the shopping cart (basket)")] int itemId)
+    /// <summary>
+    /// 将商品添加到用户的购物车
+    /// </summary>
+    /// <param name="itemId">要添加的商品ID</param>
+    /// <returns>操作结果信息</returns>
+    [Description("将产品添加到用户的购物车中。")]
+    private async Task<string> AddToCart([Description("要添加到购物车（购物篮）的产品的 ID")] int itemId)
     {
         try
         {
+            // 获取商品详情并添加到购物车
             var item = await _catalogService.GetCatalogItem(itemId);
             await _basketState.AddAsync(item!);
-            return "Item added to shopping cart.";
+            return "商品已加入购物车。";
         }
         catch (Grpc.Core.RpcException e) when (e.StatusCode == Grpc.Core.StatusCode.Unauthenticated)
         {
-            return "Unable to add an item to the cart. You must be logged in.";
+            return "无法将商品添加到购物车。您必须登录。";
         }
         catch (Exception e)
         {
-            return Error(e, "Unable to add the item to the cart.");
+            return Error(e, "无法将商品添加到购物车。");
         }
     }
 
-    [Description("Gets information about the contents of the user's shopping cart (basket)")]
+    /// <summary>
+    /// 获取用户购物车的内容
+    /// </summary>
+    /// <returns>序列化的购物车内容JSON字符串</returns>
+    [Description("获取有关用户购物车 （购物篮） 内容的信息")]
     private async Task<string> GetCartContents()
     {
         try
@@ -162,10 +198,16 @@ public class ChatState
         }
         catch (Exception e)
         {
-            return Error(e, "Unable to get the cart's contents.");
+            return Error(e, "无法获取购物车的内容。");
         }
     }
 
+    /// <summary>
+    /// 记录错误并返回错误消息
+    /// </summary>
+    /// <param name="e">异常对象</param>
+    /// <param name="message">错误消息</param>
+    /// <returns>错误消息字符串</returns>
     private string Error(Exception e, string message)
     {
         if (_logger.IsEnabled(LogLevel.Error))

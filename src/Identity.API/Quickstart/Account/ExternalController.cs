@@ -1,5 +1,8 @@
-namespace IdentityServerHost.Quickstart.UI;
+﻿namespace IdentityServerHost.Quickstart.UI;
 
+/// <summary>
+/// 处理外部身份验证（如Google、Facebook等）的控制器
+/// </summary>
 [SecurityHeaders]
 [AllowAnonymous]
 public class ExternalController : Controller
@@ -11,6 +14,9 @@ public class ExternalController : Controller
     private readonly IEventService _events;
     private readonly ILogger<ExternalController> _logger;
 
+    /// <summary>
+    /// 构造函数，注入所需的服务
+    /// </summary>
     public ExternalController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
@@ -28,21 +34,24 @@ public class ExternalController : Controller
     }
 
     /// <summary>
-    /// initiate roundtrip to external authentication provider
+    /// 发起与外部身份验证提供程序的交互
     /// </summary>
+    /// <param name="scheme">身份验证方案，如"Google"、"Facebook"等</param>
+    /// <param name="returnUrl">认证成功后的重定向URL</param>
+    /// <returns>重定向到外部登录提供商的Action结果</returns>
     [HttpGet]
     public IActionResult Challenge(string scheme, string returnUrl)
     {
         if (string.IsNullOrEmpty(returnUrl)) returnUrl = "~/";
 
-        // validate returnUrl - either it is a valid OIDC URL or back to a local page
+        // 验证returnUrl - 必须是有效的OIDC URL或本地页面
         if (Url.IsLocalUrl(returnUrl) == false && _interaction.IsValidReturnUrl(returnUrl) == false)
         {
-            // user might have clicked on a malicious link - should be logged
+            // 用户可能点击了恶意链接 - 应该记录
             throw new Exception("invalid return URL");
         }
 
-        // start challenge and roundtrip the return URL and scheme 
+        // 启动挑战并传递returnUrl和scheme 
         var props = new AuthenticationProperties
         {
             RedirectUri = Url.Action(nameof(Callback)),
@@ -54,48 +63,48 @@ public class ExternalController : Controller
         };
 
         return Challenge(props, scheme);
-
     }
 
     /// <summary>
-    /// Post processing of external authentication
+    /// 外部身份验证后的回调处理
     /// </summary>
+    /// <returns>根据认证结果重定向到相应页面</returns>
     [HttpGet]
     public async Task<IActionResult> Callback()
     {
-        // read external identity from the temporary cookie
+        // 从临时cookie中读取外部身份信息
         var result = await HttpContext.AuthenticateAsync(IdentityServerConstants.ExternalCookieAuthenticationScheme);
         if (result?.Succeeded != true)
         {
             throw new Exception("External authentication error");
         }
 
+        // 调试级别记录外部声明信息
         if (_logger.IsEnabled(LogLevel.Debug))
         {
             var externalClaims = result.Principal.Claims.Select(c => $"{c.Type}: {c.Value}");
             _logger.LogDebug("External claims: {@claims}", externalClaims);
         }
 
-        // lookup our user and external provider info
+        // 查找用户和外部提供程序信息
         var (user, provider, providerUserId, claims) = await FindUserFromExternalProviderAsync(result);
         if (user == null)
         {
-            // this might be where you might initiate a custom workflow for user registration
-            // in this sample we don't show how that would be done, as our sample implementation
-            // simply auto-provisions new external user
+            // 如果用户不存在，自动创建新用户
+            // 在实际应用中，可能需要自定义注册流程
+            // 此示例简单地自动创建新用户
             user = await AutoProvisionUserAsync(provider, providerUserId, claims);
         }
 
-        // this allows us to collect any additional claims or properties
-        // for the specific protocols used and store them in the local auth cookie.
-        // this is typically used to store data needed for signout from those protocols.
+        // 收集特定协议使用的额外声明或属性
+        // 通常用于存储注销所需的数据
         var additionalLocalClaims = new List<Claim>();
         var localSignInProps = new AuthenticationProperties();
         ProcessLoginCallback(result, additionalLocalClaims, localSignInProps);
 
-        // issue authentication cookie for user
-        // we must issue the cookie maually, and can't use the SignInManager because
-        // it doesn't expose an API to issue additional claims from the login workflow
+        // 为用户颁发身份验证cookie
+        // 需要手动颁发cookie，不能使用SignInManager
+        // 因为它没有提供API来从登录工作流中颁发额外的声明
         var principal = await _signInManager.CreateUserPrincipalAsync(user);
         additionalLocalClaims.AddRange(principal.Claims);
         var name = principal.FindFirst(JwtClaimTypes.Name)?.Value ?? user.Id;
@@ -107,24 +116,24 @@ public class ExternalController : Controller
             AdditionalClaims = additionalLocalClaims
         };
 
+        // 在本地登录用户
         await HttpContext.SignInAsync(isuser, localSignInProps);
 
-        // delete temporary cookie used during external authentication
+        // 删除外部身份验证期间使用的临时cookie
         await HttpContext.SignOutAsync(IdentityServerConstants.ExternalCookieAuthenticationScheme);
 
-        // retrieve return URL
+        // 获取返回URL
         var returnUrl = result.Properties.Items["returnUrl"] ?? "~/";
 
-        // check if external login is in the context of an OIDC request
+        // 检查外部登录是否在OIDC请求的上下文中
         var context = await _interaction.GetAuthorizationContextAsync(returnUrl);
         await _events.RaiseAsync(new UserLoginSuccessEvent(provider, providerUserId, user.Id, name, true, context?.Client.ClientId));
 
+        // 对于原生客户端，调整响应方式以提供更好的用户体验
         if (context != null)
         {
             if (context.IsNativeClient())
             {
-                // The client is native, so this change in how to
-                // return the response is for better UX for the end user.
                 return this.LoadingPage("Redirect", returnUrl);
             }
         }
@@ -132,37 +141,49 @@ public class ExternalController : Controller
         return Redirect(returnUrl);
     }
 
+    /// <summary>
+    /// 从外部提供程序查找用户
+    /// </summary>
+    /// <param name="result">身份验证结果</param>
+    /// <returns>用户、提供程序、提供程序用户ID和声明的元组</returns>
     private async Task<(ApplicationUser user, string provider, string providerUserId, IEnumerable<Claim> claims)>
         FindUserFromExternalProviderAsync(AuthenticateResult result)
     {
         var externalUser = result.Principal;
 
-        // try to determine the unique id of the external user (issued by the provider)
-        // the most common claim type for that are the sub claim and the NameIdentifier
-        // depending on the external provider, some other claim type might be used
+        // 尝试确定外部用户的唯一ID（由提供程序颁发）
+        // 最常见的声明类型是sub声明和NameIdentifier
+        // 根据外部提供程序的不同，可能使用其他声明类型
         var userIdClaim = externalUser.FindFirst(JwtClaimTypes.Subject) ??
                           externalUser.FindFirst(ClaimTypes.NameIdentifier) ??
                           throw new Exception("Unknown userid");
 
-        // remove the user id claim so we don't include it as an extra claim if/when we provision the user
+        // 移除用户ID声明，以免在预置用户时将其作为额外声明包含
         var claims = externalUser.Claims.ToList();
         claims.Remove(userIdClaim);
 
         var provider = result.Properties.Items["scheme"];
         var providerUserId = userIdClaim.Value;
 
-        // find external user
+        // 查找外部用户
         var user = await _userManager.FindByLoginAsync(provider, providerUserId);
 
         return (user, provider, providerUserId, claims);
     }
 
+    /// <summary>
+    /// 自动创建新用户
+    /// </summary>
+    /// <param name="provider">身份验证提供程序</param>
+    /// <param name="providerUserId">提供程序用户ID</param>
+    /// <param name="claims">用户声明</param>
+    /// <returns>新创建的用户</returns>
     private async Task<ApplicationUser> AutoProvisionUserAsync(string provider, string providerUserId, IEnumerable<Claim> claims)
     {
-        // create a list of claims that we want to transfer into our store
+        // 创建要转入存储的声明列表
         var filtered = new List<Claim>();
 
-        // user's display name
+        // 用户显示名称
         var name = claims.FirstOrDefault(x => x.Type == JwtClaimTypes.Name)?.Value ??
             claims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value;
         if (name != null)
@@ -171,6 +192,7 @@ public class ExternalController : Controller
         }
         else
         {
+            // 如果没有完整名称，尝试组合名字和姓氏
             var first = claims.FirstOrDefault(x => x.Type == JwtClaimTypes.GivenName)?.Value ??
                 claims.FirstOrDefault(x => x.Type == ClaimTypes.GivenName)?.Value;
             var last = claims.FirstOrDefault(x => x.Type == JwtClaimTypes.FamilyName)?.Value ??
@@ -189,7 +211,7 @@ public class ExternalController : Controller
             }
         }
 
-        // email
+        // 电子邮件
         var email = claims.FirstOrDefault(x => x.Type == JwtClaimTypes.Email)?.Value ??
            claims.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value;
         if (email != null)
@@ -197,6 +219,7 @@ public class ExternalController : Controller
             filtered.Add(new Claim(JwtClaimTypes.Email, email));
         }
 
+        // 创建新用户
         var user = new ApplicationUser
         {
             UserName = Guid.NewGuid().ToString(),
@@ -204,31 +227,39 @@ public class ExternalController : Controller
         var identityResult = await _userManager.CreateAsync(user);
         if (!identityResult.Succeeded) throw new Exception(identityResult.Errors.First().Description);
 
+        // 添加筛选后的声明
         if (filtered.Any())
         {
             identityResult = await _userManager.AddClaimsAsync(user, filtered);
             if (!identityResult.Succeeded) throw new Exception(identityResult.Errors.First().Description);
         }
 
+        // 添加外部登录信息
         identityResult = await _userManager.AddLoginAsync(user, new UserLoginInfo(provider, providerUserId, provider));
         if (!identityResult.Succeeded) throw new Exception(identityResult.Errors.First().Description);
 
         return user;
     }
 
-    // if the external login is OIDC-based, there are certain things we need to preserve to make logout work
-    // this will be different for WS-Fed, SAML2p or other protocols
+    /// <summary>
+    /// 处理登录回调
+    /// 如果外部登录基于OIDC，需要保留某些信息以使注销正常工作
+    /// 对于WS-Fed、SAML2p或其他协议，处理方式会有所不同
+    /// </summary>
+    /// <param name="externalResult">外部身份验证结果</param>
+    /// <param name="localClaims">本地声明列表</param>
+    /// <param name="localSignInProps">本地登录属性</param>
     private void ProcessLoginCallback(AuthenticateResult externalResult, List<Claim> localClaims, AuthenticationProperties localSignInProps)
     {
-        // if the external system sent a session id claim, copy it over
-        // so we can use it for single sign-out
+        // 如果外部系统发送了会话ID声明，复制它
+        // 以便用于单点注销
         var sid = externalResult.Principal.Claims.FirstOrDefault(x => x.Type == JwtClaimTypes.SessionId);
         if (sid != null)
         {
             localClaims.Add(new Claim(JwtClaimTypes.SessionId, sid.Value));
         }
 
-        // if the external provider issued an id_token, we'll keep it for signout
+        // 如果外部提供程序颁发了id_token，保留它用于注销
         var idToken = externalResult.Properties.GetTokenValue("id_token");
         if (idToken != null)
         {

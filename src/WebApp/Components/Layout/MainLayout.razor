@@ -1,13 +1,21 @@
 ﻿@using eShop.WebApp.Components.Chatbot
 @inherits LayoutComponentBase
 
+@* 页面顶部导航栏组件 *@
 <HeaderBar />
+
+@* 主体内容区域 - 渲染子页面内容 *@
 @Body
+
+@* 聊天机器人按钮组件 - 提供用户交互支持 *@
 <ShowChatbotButton />
+
+@* 页面底部信息栏组件 *@
 <FooterBar />
 
+@* Blazor错误处理UI - 在发生未处理异常时显示 *@
 <div id="blazor-error-ui">
-    An unhandled error has occurred.
-    <a href="" class="reload">Reload</a>
+    发生未处理的错误。
+    <a href="" class="reload">重新加载</a>
     <a class="dismiss">🗙</a>
 </div>

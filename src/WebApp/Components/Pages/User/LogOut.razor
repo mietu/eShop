@@ -1,5 +1,12 @@
 ﻿@page "/user/logout"
 @*
-    When the 'log out' form is posted, it is handled inside UserMenu.razor.
-    This page only exists to create an endpoint that accepts the form post.
+    注销页面 - 此页面作为注销操作的端点存在
+    
+    功能说明:
+    - 当用户点击注销按钮时，表单会提交到此URL
+    - 实际的注销逻辑在UserMenu.razor组件中处理
+    - 此页面不包含任何可见内容，仅作为服务器端路由目标
+    - 用户不会直接看到此页面，通常会在注销后被重定向
+    
+    注意: 如需修改注销行为，请参考UserMenu.razor中的相关代码
 *@

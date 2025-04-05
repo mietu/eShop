@@ -1,21 +1,27 @@
 @model string
 
+@* 主容器 - 设备代码输入页面 *@
 <div class="page-device-code">
+    @* 页面标题和说明 *@
     <div class="lead">
         <h1>User Code</h1>
         <p>Please enter the code displayed on your device.</p>
     </div>
 
+    @* 包含验证错误摘要的部分视图 *@
     <partial name="_ValidationSummary" />
 
     <div class="row">
         <div class="col-sm-6">
+            @* 用户代码捕获表单，提交到UserCodeCapture操作 *@
             <form asp-action="UserCodeCapture">
                 <div class="form-group">
                     <label for="userCode">User Code:</label>
+                    @* 用户代码输入框，自动获取焦点 *@
                     <input class="form-control" for="userCode" name="userCode" autofocus />
                 </div>
 
+                @* 提交按钮 *@
                 <button class="btn btn-primary" name="button">Submit</button>
             </form>
         </div>

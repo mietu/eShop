@@ -1,10 +1,17 @@
 @using System.Diagnostics
 
+@*
+    这是 IdentityServer4 的欢迎页面
+    显示基本信息和重要链接
+*@
+
 @{
+    // 获取 IdentityServer 的当前版本号（去除 build 信息）
     var version = FileVersionInfo.GetVersionInfo(typeof(Duende.IdentityServer.Hosting.IdentityServerMiddleware).Assembly.Location).ProductVersion.Split('+').First();
 }
 
 <div class="welcome-page">
+    @* 页面标题和 Logo *@
     <h1>
         <img src="~/icon.jpg">
         Welcome to IdentityServer4
@@ -12,17 +19,21 @@
     </h1>
 
     <ul>
+        @* OIDC 发现文档链接 *@
         <li>
             IdentityServer publishes a
             <a href="~/.well-known/openid-configuration">discovery document</a>
             where you can find metadata and links to all the endpoints, key material, etc.
         </li>
+        @* 当前会话声明信息链接 *@
         <li>
             Click <a href="~/diagnostics">here</a> to see the claims for your current session.
         </li>
+        @* 授权管理链接 *@
         <li>
             Click <a href="~/grants">here</a> to manage your stored grants.
         </li>
+        @* 源代码和示例项目链接 *@
         <li>
             Here are links to the
             <a href="https://github.com/identityserver/IdentityServer4">source code repository</a>,

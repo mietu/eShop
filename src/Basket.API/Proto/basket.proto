@@ -1,33 +1,53 @@
-﻿syntax = "proto3";
+﻿// 指定使用 protocol buffers 版本 3 语法
+syntax = "proto3";
 
+// 设置生成的 C# 类的命名空间
 option csharp_namespace = "eShop.Basket.API.Grpc";
 
+// 定义服务所属的包名
 package BasketApi;
 
+// 定义 Basket 服务，包含三个 RPC 方法
 service Basket {
+    // 获取购物篮数据的方法
     rpc GetBasket(GetBasketRequest) returns (CustomerBasketResponse) {}
+    
+    // 更新购物篮数据的方法
     rpc UpdateBasket(UpdateBasketRequest) returns (CustomerBasketResponse) {}
+    
+    // 删除购物篮的方法
     rpc DeleteBasket(DeleteBasketRequest) returns (DeleteBasketResponse) {}
 }
 
+// 获取购物篮的请求消息（当前为空，可能后续会添加参数如用户ID等）
 message GetBasketRequest {
 }
 
+// 客户购物篮响应消息，包含购物项列表
 message CustomerBasketResponse {
+    // 购物项列表，field number 为 1
     repeated BasketItem items = 1;
 }
 
+// 购物项消息，定义单个购物项的结构
 message BasketItem {
+    // 产品ID，field number 为 2
     int32 product_id = 2;
+    
+    // 产品数量，field number 为 6
     int32 quantity = 6;
 }
 
+// 更新购物篮的请求消息
 message UpdateBasketRequest {
+    // 要更新的购物项列表，field number 为 2
     repeated BasketItem items = 2;
 }
 
+// 删除购物篮的请求消息（当前为空，可能后续会添加参数）
 message DeleteBasketRequest {
 }
 
+// 删除购物篮的响应消息（当前为空，可能用于确认删除成功或提供其他信息）
 message DeleteBasketResponse {
 }

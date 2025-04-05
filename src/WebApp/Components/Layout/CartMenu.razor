@@ -5,6 +5,7 @@
 @inject NavigationManager NavigationManager
 @implements IDisposable
 
+<!-- 购物车导航链接，显示购物车图标和数量 -->
 <a aria-label="cart" href="cart">
     <img role="presentation" src="icons/cart.svg" />
     @if (basketItems?.Count > 0)
@@ -14,37 +15,62 @@
 </a>
 
 @code {
+    /// <summary>
+    /// 购物车状态变更通知的订阅
+    /// </summary>
     IDisposable? basketStateSubscription;
+
+    /// <summary>
+    /// 购物车中的商品集合
+    /// </summary>
     private IReadOnlyCollection<BasketItem>? basketItems;
 
+    /// <summary>
+    /// 通过级联参数获取当前HTTP上下文
+    /// </summary>
     [CascadingParameter]
     public HttpContext? HttpContext { get; set; }
 
+    /// <summary>
+    /// 计算购物车中所有商品的总数量
+    /// </summary>
     private int? TotalQuantity => basketItems?.Sum(i => i.Quantity);
 
+    /// <summary>
+    /// 组件初始化时的异步操作
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
-        // The basket contents may change during the lifetime of this component (e.g., when an item is
-        // added during the current request). If this EventCallback is invoked, it will cause this
-        // component to re-render with the updated data.
+        // 订阅购物车内容变更通知
+        // 购物车内容可能在组件的生命周期内发生变化（例如，在当前请求期间添加了新商品）
+        // 如果此EventCallback被调用，它将使组件使用更新后的数据重新渲染
         basketStateSubscription = Basket.NotifyOnChange(
             EventCallback.Factory.Create(this, UpdateBasketItemsAsync));
 
         try
         {
+            // 初始加载购物车数据
             await UpdateBasketItemsAsync();
         }
         catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
         {
+            // 如果获取购物车数据时发生未授权错误，则执行注销操作
             await LogOutService.LogOutAsync(HttpContext!);
         }
     }
 
+    /// <summary>
+    /// 组件销毁时释放资源
+    /// </summary>
     public void Dispose()
     {
+        // 取消购物车状态变更的订阅
         basketStateSubscription?.Dispose();
     }
 
+    /// <summary>
+    /// 从服务获取最新的购物车商品数据
+    /// </summary>
     private async Task UpdateBasketItemsAsync()
     {
         basketItems = await Basket.GetBasketItemsAsync();

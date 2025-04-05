@@ -2,20 +2,56 @@
 @inject NavigationManager Nav
 @attribute [Authorize]
 @code {
+    /// <summary>
+    /// 从查询字符串中获取返回 URL 参数
+    /// 登录成功后用户将被重定向到此 URL
+    /// </summary>
     [SupplyParameterFromQuery]
     public string? ReturnUrl { get; set; }
 
+    /// <summary>
+    /// 通过级联参数获取当前 HTTP 上下文
+    /// 用于访问请求和响应信息
+    /// </summary>
     [CascadingParameter]
     public HttpContext? HttpContext { get; set; }
 
+    /// <summary>
+    /// 组件初始化时执行的方法
+    /// 处理用户登录后的重定向逻辑
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
-        var returnUrl = ReturnUrl ?? "/";
-        var url = new Uri(returnUrl, UriKind.RelativeOrAbsolute);
-        Nav.NavigateTo(url.IsAbsoluteUri ? "/" : returnUrl);
+        // 如果HttpContext为空，则不执行操作
+        if (HttpContext == null)
+        {
+            // 不导航，等待认证过程完成
+            return;
+        }
+
+        // 检查用户是否已登录
+        // 检查是否应该导航（例如，避免循环导航）
+        if (HttpContext.User.Identity?.IsAuthenticated == true)
+        {
+            // 如果没有指定返回 URL，默认重定向到首页
+            var returnUrl = !String.IsNullOrWhiteSpace(ReturnUrl) ? ReturnUrl : "/";
+
+            // 解析 URL 以确定是相对路径还是绝对路径
+            var url = new Uri(returnUrl, UriKind.RelativeOrAbsolute);
+
+            // 如果是绝对路径（可能是跨站请求），则重定向到首页，否则重定向到指定的返回 URL
+            Nav.NavigateTo(url.IsAbsoluteUri ? "/" : returnUrl);
+        }
+
         await base.OnInitializedAsync();
     }
 
+    /// <summary>
+    /// 静态辅助方法，用于生成登录页面的 URL
+    /// 会自动包含当前页面作为重定向 URL 参数
+    /// </summary>
+    /// <param name="nav">导航管理器实例</param>
+    /// <returns>格式化后的登录页面 URL</returns>
     public static string Url(NavigationManager nav)
         => $"user/login?returnUrl={Uri.EscapeDataString(nav.ToBaseRelativePath(nav.Uri))}";
 }

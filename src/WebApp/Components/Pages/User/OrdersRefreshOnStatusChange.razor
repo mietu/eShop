@@ -5,37 +5,54 @@
 @inject NavigationManager Nav
 @implements IDisposable
 @code {
+    // 订单状态变更通知的订阅对象，用于在组件销毁时取消订阅
     private IDisposable? orderStatusChangedSubscription;
 
+    /// <summary>
+    /// 组件渲染后执行的操作，用于订阅订单状态变更通知
+    /// </summary>
+    /// <param name="firstRender">是否是首次渲染</param>
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
+            // 获取当前登录用户的买家ID
             var buyerId = await AuthenticationStateProvider.GetBuyerIdAsync();
             if (!string.IsNullOrEmpty(buyerId))
             {
+                // 订阅该买家的订单状态变更通知
+                // 当订单状态变更时，调用HandleOrderStatusChanged方法
                 orderStatusChangedSubscription = OrderStatusNotificationService.SubscribeToOrderStatusNotifications(
                     buyerId, () => InvokeAsync(HandleOrderStatusChanged));
             }
         }
     }
 
+    /// <summary>
+    /// 处理订单状态变更的回调方法
+    /// 当订单状态发生变化时，刷新当前页面以显示最新状态
+    /// </summary>
     private void HandleOrderStatusChanged()
     {
         try
         {
+            // 刷新当前页面以显示最新的订单状态
             Nav.Refresh();
         }
         catch (Exception ex)
         {
-            // If there's an exception, we want to handle it on this circuit,
-            // and not throw it to the upstream caller
+            // 如果发生异常，在当前电路中处理它，
+            // 而不是将异常抛给上游调用者
             _ = DispatchExceptionAsync(ex);
         }
     }
 
+    /// <summary>
+    /// 组件销毁时调用，用于清理资源
+    /// </summary>
     public void Dispose()
     {
+        // 取消订阅订单状态变更通知，防止内存泄漏
         orderStatusChangedSubscription?.Dispose();
     }
 }

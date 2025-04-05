@@ -1,9 +1,10 @@
 @model ErrorViewModel
 
 @{
-    var error = Model?.Error?.Error;
-    var errorDescription = Model?.Error?.ErrorDescription;
-    var request_id = Model?.Error?.RequestId;
+    // 从Model中获取错误信息
+    var error = Model?.Error?.Error;  // 主要错误码或消息
+    var errorDescription = Model?.Error?.ErrorDescription;  // 详细错误描述
+    var request_id = Model?.Error?.RequestId;  // 请求ID，用于跟踪和调试
 }
 
 <div class="error-page">

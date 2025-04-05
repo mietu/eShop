@@ -1,6 +1,13 @@
-﻿<Router AppAssembly="@typeof(Program).Assembly">
+﻿@* 
+    Routes.razor 提供了 Blazor 应用程序的路由功能
+    Router 组件处理应用程序内的导航和页面渲染
+*@
+<Router AppAssembly="@typeof(Program).Assembly">
     <Found Context="routeData">
+        @* 当匹配到路由时，使用 RouteView 渲染对应组件 *@
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
+        @* 导航完成后，将焦点设置到 h1 元素上以提高可访问性 *@
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
     </Found>
+    @* 缺少 NotFound 部分，用于处理找不到匹配路由的情况 *@
 </Router>

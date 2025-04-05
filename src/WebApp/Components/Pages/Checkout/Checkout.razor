@@ -5,38 +5,38 @@
 @inject NavigationManager Nav
 @attribute [Authorize]
 
-<PageTitle>Checkout | AdventureWorks</PageTitle>
-<SectionContent SectionName="page-header-title">Checkout</SectionContent>
+<PageTitle>查看 | AdventureWorks</PageTitle>
+<SectionContent SectionName="page-header-title">查看</SectionContent>
 
 <div class='checkout'>
     <EditForm EditContext="@editContext" FormName="checkout" OnSubmit="@HandleSubmitAsync" Enhance>
         <DataAnnotationsValidator />
         <div class="form">
             <div class="form-section">
-                <h2>Shipping address</h2>
+                <h2>送货地址</h2>
                 <label>
-                    Address
+                    地址
                     <InputText @bind-Value="@Info.Street" />
                     <ValidationMessage For="@(() => Info.Street)" />
                 </label>
                 <div class="form-group">
                     <div class="form-group-item">
                         <label>
-                            City
+                            城市
                             <InputText @bind-Value="@Info.City" />
                             <ValidationMessage For="@(() => Info.City)" />
                         </label>
                     </div>
                     <div class="form-group-item">
                         <label>
-                            State
+                            州
                             <InputText @bind-Value="@Info.State" />
                             <ValidationMessage For="@(() => Info.State)" />
                         </label>
                     </div>
                     <div class="form-group-item">
                         <label>
-                            Zip code
+                            邮政编码
                             <InputText @bind-Value="@Info.ZipCode" />
                             <ValidationMessage For="@(() => Info.ZipCode)" />
                         </label>
@@ -44,16 +44,47 @@
                 </div>
                 <div>
                     <label>
-                        Country
+                        国家
                         <InputText @bind-Value="@Info.Country" />
                         <ValidationMessage For="@(() => Info.Country)" />
                     </label>
                 </div>
             </div>
+            
+            <div class="form-section">
+                <h2>支付信息</h2>
+                <label>
+                    持卡人姓名
+                    <InputText @bind-Value="@Info.CardHolderName" />
+                    <ValidationMessage For="@(() => Info.CardHolderName)" />
+                </label>
+                <label>
+                    卡号
+                    <InputText @bind-Value="@Info.CardNumber" />
+                    <ValidationMessage For="@(() => Info.CardNumber)" />
+                </label>
+                <div class="form-group">
+                    <div class="form-group-item">
+                        <label>
+                            过期时间(MM/YY)
+                            <InputText @bind-Value="@CardExpiryDateText" />
+                            <ValidationMessage For="@(() => CardExpiryDateText)" />
+                        </label>
+                    </div>
+                    <div class="form-group-item">
+                        <label>
+                            安全码
+                            <InputText @bind-Value="@Info.CardSecurityNumber" />
+                            <ValidationMessage For="@(() => Info.CardSecurityNumber)" />
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
             <div class="form-section">
                 <div class="form-buttons">
-                    <a href="cart" class="button button-secondary"><img role="presentation" src="icons/arrow-left.svg" />Back to the shopping bag</a>
-                    <button class="button button-primary" type="submit">Place order</button>
+                    <a href="cart" class="button button-secondary"><img role="presentation" src="icons/arrow-left.svg" />回到购物车</a>
+                    <button class="button button-primary" type="submit">下订单</button>
                 </div>
             </div>
         </div>
@@ -70,12 +101,19 @@
 
     [CascadingParameter]
     public HttpContext HttpContext { get; set; } = default!;
+    
+    private string? CardExpiryDateText { get; set; }
 
     protected override void OnInitialized()
     {
         if (Info is null)
         {
             PopulateFormWithDefaultInfo();
+        }
+
+        if (Info!.CardExpiration.HasValue)
+        {
+            CardExpiryDateText = Info.CardExpiration.Value.ToString("MM/yy");
         }
 
         editContext = new EditContext(Info!);
@@ -91,6 +129,7 @@
             State = ReadClaim("address_state"),
             Country = ReadClaim("address_country"),
             ZipCode = ReadClaim("address_zip_code"),
+            CardHolderName = $"{ReadClaim("given_name")} {ReadClaim("family_name")}".Trim(),
             RequestId = Guid.NewGuid()
         };
 
@@ -101,6 +140,13 @@
     private async Task HandleSubmitAsync()
     {
         await PerformCustomValidationAsync();
+
+        // 解析并验证过期日期
+        Info.CardExpiration = ParseExpiryDate(CardExpiryDateText);
+        if (CardExpiryDateText != null && !Info.CardExpiration.HasValue)
+        {
+            extraMessages.Add(new FieldIdentifier(this, nameof(CardExpiryDateText)), "过期日期格式无效。使用 MM/YY");
+        }
 
         if (editContext.Validate())
         {
@@ -121,7 +167,18 @@
 
         if ((await Basket.GetBasketItemsAsync()).Count == 0)
         {
-            extraMessages.Add(new FieldIdentifier(Info, ""), "Your cart is empty");
+            extraMessages.Add(new FieldIdentifier(Info, ""), "您的购物车是空的");
+        }
+        
+        // 验证卡号和安全码
+        if (!string.IsNullOrEmpty(Info.CardNumber) && !System.Text.RegularExpressions.Regex.IsMatch(Info.CardNumber, @"^\d{16}$"))
+        {
+            extraMessages.Add(new FieldIdentifier(Info, nameof(Info.CardNumber)), "卡号必须为 16 位数字");
+        }
+        
+        if (!string.IsNullOrEmpty(Info.CardSecurityNumber) && !System.Text.RegularExpressions.Regex.IsMatch(Info.CardSecurityNumber, @"^\d{3,4}$"))
+        {
+            extraMessages.Add(new FieldIdentifier(Info, nameof(Info.CardSecurityNumber)), "安全码必须为 3 位或 4 位数字");
         }
     }
 

@@ -1,7 +1,12 @@
-﻿<footer class='eshop-footer'>
+﻿@* FooterBar.razor - 网站页脚组件 *@
+@* 包含网站版权信息和标志 *@
+
+<footer class='eshop-footer'>
   <div class='eshop-footer-content'>
     <div class='eshop-footer-row'>
+      @* 页脚标志图片，使用role="presentation"属性使其对屏幕阅读器不可见 *@
       <img role="presentation" src='images/logo-footer.svg' class='logo logo-footer' />
+      @* 版权信息 *@
       <p>© AdventureWorks</p>
     </div>
   </div>

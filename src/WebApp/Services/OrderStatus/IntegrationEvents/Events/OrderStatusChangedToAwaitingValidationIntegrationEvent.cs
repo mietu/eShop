@@ -2,13 +2,39 @@
 
 namespace eShop.WebApp.Services.OrderStatus.IntegrationEvents;
 
+/// <summary>
+/// 表示订单状态变更为"等待验证"的集成事件
+/// 当订单进入等待验证状态时，系统会发布此事件以通知相关服务
+/// </summary>
 public record OrderStatusChangedToAwaitingValidationIntegrationEvent : IntegrationEvent
 {
+    /// <summary>
+    /// 获取订单ID
+    /// </summary>
     public int OrderId { get; }
+
+    /// <summary>
+    /// 获取订单状态描述
+    /// </summary>
     public string OrderStatus { get; }
+
+    /// <summary>
+    /// 获取买家名称
+    /// </summary>
     public string BuyerName { get; }
+
+    /// <summary>
+    /// 获取买家身份标识符
+    /// </summary>
     public string BuyerIdentityGuid { get; }
 
+    /// <summary>
+    /// 初始化订单状态变更为"等待验证"的集成事件实例
+    /// </summary>
+    /// <param name="orderId">订单ID</param>
+    /// <param name="orderStatus">订单状态描述</param>
+    /// <param name="buyerName">买家名称</param>
+    /// <param name="buyerIdentityGuid">买家身份标识符</param>
     public OrderStatusChangedToAwaitingValidationIntegrationEvent(
         int orderId, string orderStatus, string buyerName, string buyerIdentityGuid)
     {

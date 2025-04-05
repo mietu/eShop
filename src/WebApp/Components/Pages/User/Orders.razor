@@ -1,30 +1,39 @@
 ﻿@page "/user/orders"
-@attribute [Authorize]
-@attribute [StreamRendering]
-@inject OrderingService OrderingService
+@* 要求用户必须登录才能访问此页面 *@
+@attribute [Authorize]  
+@* 启用流式渲染以提高页面加载性能 *@
+@attribute [StreamRendering] 
+@* 注入订单服务用于获取订单数据 *@
+@inject OrderingService OrderingService 
 
-<PageTitle>Orders | AdventureWorks</PageTitle>
-<SectionContent SectionName="page-header-title">Orders</SectionContent>
-<OrdersRefreshOnStatusChange />
+<PageTitle>订单 | AdventureWorks</PageTitle>
+<SectionContent SectionName="page-header-title">订单</SectionContent>
+@* 组件用于监听订单状态变化并刷新页面 *@
+<OrdersRefreshOnStatusChange /> 
 
 <div class="orders">
 @if (orders is null)
 {
-    <p>Loading...</p>
+    @* 数据加载中显示的内容 *@
+    <p>加载中</p>
 }
 else if (orders.Length == 0)
 {
-    <p>You haven't yet placed any orders.</p>
+    @* 没有订单数据时显示的内容 *@
+    <p>您尚未添加任何订单。</p>
 }
 else
 {
+    @* 显示订单列表 *@
     <ul class="orders-list">
+        @* 表头部分 *@
         <li class="orders-header orders-item">
-            <div>Number</div>
-            <div>Date</div>
-            <div class="total-header">Total</div>
-            <div>Status</div>
+            <div>订单号</div>
+            <div>日期</div>
+            <div class="total-header">总数</div>
+            <div>状态</div>
         </li>
+        @* 遍历并显示每一个订单 *@
         @foreach (var order in orders)
         {
             <li class="orders-item">
@@ -35,10 +44,10 @@ else
                     @order.Date
                 </div>
                 <div class="order-total">
-                   $@order.Total.ToString("0.00")
+                   $@order.Total.ToString("0.00") @* 格式化价格为两位小数 *@
                 </div>
                 <div class="order-status">
-                    <span class="status @order.Status.ToLower()">
+                    <span class="status @order.Status.ToLower()"> @* 根据订单状态添加对应的CSS类 *@
                         @order.Status
                     </span>
                 </div>
@@ -49,8 +58,10 @@ else
 </div>
 
 @code {
+    // 存储用户订单数据的数组
     private OrderRecord[]? orders;
 
+    // 组件初始化时加载订单数据
     protected override async Task OnInitializedAsync()
     {
         orders = await OrderingService.GetOrders();

@@ -1,3 +1,8 @@
+@*
+    验证摘要组件
+    当模型状态无效时，显示所有验证错误信息
+    用于表单提交验证失败情况的统一错误展示
+*@
 @if (ViewContext.ModelState.IsValid == false)
 {
     <div class="alert alert-danger">

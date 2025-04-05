@@ -1,12 +1,24 @@
 ﻿@page "/login"
 @using Microsoft.AspNetCore.Authorization
+@* 要求用户必须登录才能访问此页面 *@
 @attribute [Authorize]
+ @* 注入NavigationManager服务用于页面导航 *@
 @inject NavigationManager Nav
+
 @code {
+    // 从URL查询参数中获取ReturnUrl
     [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
+    
+    /// <summary>
+    /// 组件初始化时执行
+    /// </summary>
     protected override void OnInitialized()
     {
+        // 创建相对URI，如果ReturnUrl为null或空，则默认为根路径
         var returnUrl = new Uri(ReturnUrl ?? "", UriKind.Relative);
+        
+        // 重定向到指定的returnUrl
+        // replace: true 表示替换当前历史记录项，而不是添加新项
         Nav.NavigateTo(returnUrl.ToString(), replace: true);
     }
 }

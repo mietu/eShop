@@ -1,6 +1,41 @@
-﻿<Router AppAssembly="@typeof(Program).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-    </Found>
-</Router>
+﻿@* 
+    Router 组件是 Blazor 应用程序的核心路由组件
+    它负责侦听 URL 的更改并根据应用程序的路由配置渲染相应的组件
+*@
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor httpContextAccessor
+
+<CascadingAuthenticationState>
+    <CascadingValue Value="httpContextAccessor.HttpContext">
+        @* 
+            CascadingValue 组件用于将值传递给子组件
+            这里将 HttpContext 传递给子组件，以便它们可以访问当前的 HTTP 上下文
+        *@
+        <Router AppAssembly="@typeof(Program).Assembly">
+            @* 
+             Found 部分定义了当路由匹配成功时要渲染的内容
+            routeData 包含当前路由的相关信息，包括匹配的组件和参数
+            *@
+            <Found Context="routeData">
+                @* 
+                RouteView 渲染与当前 URL 路由匹配的组件
+                DefaultLayout 指定所有页面的默认布局组件
+                *@
+                <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
+                    @* 
+                    FocusOnNavigate 在导航后将焦点设置到指定的选择器元素
+                    这有助于改善可访问性，使屏幕阅读器能够宣布页面变化
+                    *@
+                <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+            </Found>
+            <NotFound>
+                <PageTitle>未找到</PageTitle>
+                <LayoutView Layout="@typeof(Layout.MainLayout)">
+                    <p role="alert">抱歉，此页面不存在。</p>
+                </LayoutView>
+            </NotFound>
+        </Router>
+
+    </CascadingValue>
+</CascadingAuthenticationState>

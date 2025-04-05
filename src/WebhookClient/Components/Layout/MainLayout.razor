@@ -1,16 +1,20 @@
 ﻿@inherits LayoutComponentBase
 
+@* 页面头部，包含应用标题和用户信息 *@
 <header>
-    <h1><a href="">Order management</a></h1>
+    <h1><a href="">订单管理</a></h1>
     <div class="user-info">
+        @* 用户菜单组件，用于显示用户相关功能 *@
         <UserMenu />
     </div>
 </header>
 
+@* 主内容区域，将渲染页面内容（子组件） *@
 <main>@Body</main>
 
+@* Blazor错误UI组件，用于显示未处理的异常 *@
 <div id="blazor-error-ui">
-    An unhandled error has occurred.
-    <a href="" class="reload">Reload</a>
+    发生未处理的错误。
+    <a href="" class="reload">重新加载</a>
     <a class="dismiss">🗙</a>
 </div>

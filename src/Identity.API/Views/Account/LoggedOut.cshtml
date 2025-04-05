@@ -1,7 +1,8 @@
 @model LoggedOutViewModel
 
 @{ 
-    // set this so the layout rendering sees an anonymous user
+    // 设置ViewData以便布局渲染能够识别为匿名用户状态
+    // 这样可以确保相应的布局元素(如导航菜单)能够正确显示
     ViewData["signed-out"] = true;
 }
 
@@ -14,6 +15,7 @@
     @if (Model.PostLogoutRedirectUri != null)
     {
         <div>
+            @* 显示返回客户端应用程序的链接 *@
             Click <a class="PostLogoutRedirectUri" href="@Model.PostLogoutRedirectUri">here</a> to return to the
             <span>@Model.ClientName</span> application.
         </div>
@@ -21,6 +23,10 @@
 
     @if (Model.SignOutIframeUrl != null)
     {
+        @* 
+        使用隐藏iframe执行单点登出操作
+        这个iframe通常用于在SSO场景中通知其他应用程序用户已登出
+        *@
         <iframe width="0" height="0" class="signout" src="@Model.SignOutIframeUrl"></iframe>
     }
 </div>
@@ -29,6 +35,10 @@
 {
     @if (Model.AutomaticRedirectAfterSignOut)
     {
+        @* 
+        如果启用了自动重定向，加载处理重定向的脚本
+        此脚本会在登出后自动将用户重定向到指定目标
+        *@
         <script src="~/js/signout-redirect.js"></script>
     }
 }

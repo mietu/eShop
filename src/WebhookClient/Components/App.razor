@@ -1,17 +1,28 @@
-﻿<!DOCTYPE html>
+﻿@* 定义HTML文档类型 *@
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
+    @* 基本元数据设置 *@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
+    
+    @* 引入样式表 *@
     <link rel="stylesheet" href="app.css" />
     <link rel="stylesheet" href="WebhookClient.styles.css" />
+    
+    @* HeadOutlet组件：允许在Blazor组件中修改文档的head部分
+       @rendermode="InteractiveServer"表示以交互式服务器模式渲染 *@
     <HeadOutlet @rendermode="InteractiveServer" />
 </head>
 
 <body>
+    @* Routes组件：Blazor的路由系统入口点，处理应用内导航
+       @rendermode="InteractiveServer"表示以交互式服务器模式渲染 *@
     <Routes @rendermode="InteractiveServer" />
+    
+    @* 引入Blazor框架的JavaScript文件，启用客户端交互功能 *@
     <script src="_framework/blazor.web.js"></script>
 </body>
 

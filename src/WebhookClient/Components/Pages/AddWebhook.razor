@@ -1,65 +1,84 @@
 ﻿@page "/add-webhook"
 @using Microsoft.Extensions.Options
-@inject IOptions<WebhookClientOptions> options
-@inject NavigationManager Nav
-@inject WebhooksClient WebhooksClient
+@* 注入配置选项 *@
+@inject IOptions<WebhookClientOptions> options 
+@* 注入导航管理器用于页面导航 *@
+@inject NavigationManager Nav  
+@* 注入WebhooksClient服务用于API调用 *@
+@inject WebhooksClient WebhooksClient 
 
-<h2>Register a new webhook</h2>
+<h2>注册新的 Webhook</h2>
 
-<p>This page registers the "OrderPaid" Webhook by sending a POST to the WebHooks API. Once the Webhook is set, you will be able to see new paid orders from the <a href="">home</a> page.</p>
+<p>此页面通过向 Web Hooks API 发送 POST 来注册“Order Paid”Webhook。设置 Webhook 后, 你将可以从<a href="">home</a> 看到已支付订单。</p>
 
+@* 表单用于收集webhook注册所需的Token *@
 <form @onsubmit="RegisterAsync">
     <p>
-        Token:
+        令牌:
         <input type="text" @bind="@token" placeholder="Token" />
     </p>
-    <button class="action" type="submit">Register</button>
+    <button class="action" type="submit">注册</button>
 </form>
 
+@* 显示错误信息的条件渲染区域 *@
 @if (!string.IsNullOrEmpty(message))
 {
     <p class="error-message">@message</p>
 }
 
 @code {
+    // 存储用户输入的Token
     string? token;
+    // 存储操作结果或错误信息
     string? message;
 
+    // 组件初始化时从配置中获取Token
     protected override void OnInitialized()
     {
         token = options.Value.Token;
     }
 
+    // 注册webhook的异步方法
     private async Task RegisterAsync()
     {
+        // 验证Token不为空
         if (string.IsNullOrEmpty(token))
         {
             return;
         }
 
+        // 清除之前的消息
         message = null;
+        
+        // 确定基础URL，优先使用配置中的SelfUrl，否则使用当前应用程序的BaseUri
         var baseUrl = !string.IsNullOrEmpty(options.Value.SelfUrl)
             ? options.Value.SelfUrl
             : Nav.BaseUri;
+            
+        // 构建授权URL和webhook接收URL
         var granturl = $"{baseUrl}check";
         var url = $"{baseUrl}webhook-received";
 
+        // 创建webhook订阅请求对象
         var payload = new WebhookSubscriptionRequest
         {
-            Event = "OrderPaid",
-            GrantUrl = granturl,
-            Url = url,
-            Token = token
+            Event = "OrderPaid",     // 订阅的事件类型
+            GrantUrl = granturl,     // 授权URL
+            Url = url,               // webhook接收URL
+            Token = token            // 认证Token
         };
 
+        // 发送webhook注册请求
         var response = await WebhooksClient.AddWebHookAsync(payload);
         if (response.IsSuccessStatusCode)
         {
+            // 注册成功，导航到首页
             Nav.NavigateTo("");
         }
         else
         {
-            message = $"Registation was rejected with status {(int)response.StatusCode} {response.ReasonPhrase}";
+            // 注册失败，显示错误信息
+            message = $"注册被拒绝，状态：{(int)response.StatusCode} {response.ReasonPhrase}";
         }
     }
 }

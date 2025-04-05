@@ -2,23 +2,35 @@
 @using System.Web
 @inject NavigationManager Nav
 
+<!-- 用户菜单组件：根据用户认证状态显示登录/登出选项 -->
 <AuthorizeView>
+    <!-- 已认证用户会看到此部分 -->
     <Authorized>
+        <!-- 显示当前用户名 -->
         <strong>@context.User.Identity?.Name</strong>
+        <!-- 登出表单，使用POST提交到logout路径 -->
         <form method="post" action="logout">
+            <!-- 添加防伪令牌，防止CSRF攻击 -->
             <AntiforgeryToken />
-            <button class="action" type="submit">Log out</button>
+            <button class="action" type="submit">退出</button>
         </form>
     </Authorized>
+    <!-- 未认证用户会看到此部分 -->
     <NotAuthorized>
-        <button class="action" @onclick="@LogIn">Log in</button>
+        <button class="action" @onclick="@LogIn">登录</button>
     </NotAuthorized>
 </AuthorizeView>
 
 @code {
+    /// <summary>
+    /// 处理登录按钮点击事件
+    /// 将用户重定向到登录页面，并保存当前URL作为登录后的返回地址
+    /// </summary>
     private void LogIn()
     {
+        // 获取当前相对URL路径作为返回地址
         var returnUrl = Nav.ToBaseRelativePath(Nav.Uri);
+        // 重定向到登录页面，附加编码后的返回URL参数，并强制完全重新加载页面
         Nav.NavigateTo($"login?returnUrl={HttpUtility.UrlEncode(returnUrl)}", forceLoad: true);
     }
 }

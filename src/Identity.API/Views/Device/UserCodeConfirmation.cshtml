@@ -1,7 +1,14 @@
 @model DeviceAuthorizationViewModel
 
+@*
+    视图：设备授权确认页
+    功能：允许用户确认设备授权请求，并选择要授予的权限
+    使用场景：当用户需要对外部设备授权访问其账户时显示此页面
+*@
+
 <div class="page-device-confirmation">
     <div class="lead">
+        @* 显示客户端logo（如果有） *@
         @if (Model.ClientLogoUrl != null)
         {
             <div class="client-logo"><img src="@Model.ClientLogoUrl"></div>
@@ -10,6 +17,7 @@
             @Model.ClientName
             <small class="text-muted">is requesting your permission</small>
         </h1>
+        @* 显示用户代码确认提示（如需确认） *@
         @if (Model.ConfirmUserCode)
         {
             <p>Please confirm that the authorization request quotes the code: <strong>@Model.UserCode</strong>.</p>
@@ -17,6 +25,7 @@
         <p>Uncheck the permissions you do not wish to grant.</p>
     </div>
 
+    @* 验证摘要区域 - 显示任何验证错误 *@
     <div class="row">
         <div class="col-sm-8">
             <partial name="_ValidationSummary" />
@@ -24,9 +33,11 @@
     </div>
 
     <form asp-action="Callback">
+        @* 隐藏字段保存用户代码 *@
         <input asp-for="UserCode" type="hidden" value="@Model.UserCode" />
         <div class="row">
             <div class="col-sm-8">
+                @* 身份作用域部分 - 显示请求的个人信息权限 *@
                 @if (Model.IdentityScopes.Any())
                 {
                     <div class="form-group">
@@ -45,6 +56,7 @@
                     </div>
                 }
 
+                @* API作用域部分 - 显示请求的应用程序访问权限 *@
                 @if (Model.ApiScopes.Any())
                 {
                     <div class="form-group">
@@ -63,6 +75,7 @@
                     </div>
                 }
 
+                @* 设备描述输入部分 *@
                 <div class="form-group">
                     <div class="card">
                         <div class="card-header">
@@ -75,6 +88,7 @@
                     </div>
                 </div>
 
+                @* 记住决定选项（如果允许） *@
                 @if (Model.AllowRememberConsent)
                 {
                     <div class="form-group">
@@ -90,10 +104,12 @@
         </div>
 
         <div class="row">
+            @* 操作按钮区域 *@
             <div class="col-sm-4">
                 <button name="button" value="yes" class="btn btn-primary" autofocus>Yes, Allow</button>
                 <button name="button" value="no" class="btn btn-secondary">No, Do Not Allow</button>
             </div>
+            @* 客户端信息链接（如果有提供URL） *@
             <div class="col-sm-4 col-lg-auto">
                 @if (Model.ClientUrl != null)
                 {

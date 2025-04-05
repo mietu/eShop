@@ -7,6 +7,7 @@
 
     <div class="row">
         <div class="col">
+            <!-- 左侧卡片：显示用户身份声明信息 -->
             <div class="card">
                 <div class="card-header">
                     <h2>Claims</h2>
@@ -15,6 +16,7 @@
                     <dl>
                         @foreach (var claim in Model.AuthenticateResult.Principal.Claims)
                         {
+                            <!-- 遍历并显示所有声明类型和值 -->
                             <dt>@claim.Type</dt>
                             <dd>@claim.Value</dd>
                         }
@@ -24,6 +26,7 @@
         </div>
         
         <div class="col">
+            <!-- 右侧卡片：显示身份验证属性和客户端信息 -->
             <div class="card">
                 <div class="card-header">
                     <h2>Properties</h2>
@@ -32,11 +35,13 @@
                     <dl>
                         @foreach (var prop in Model.AuthenticateResult.Properties.Items)
                         {
+                            <!-- 遍历并显示所有身份验证属性 -->
                             <dt>@prop.Key</dt>
                             <dd>@prop.Value</dd>
                         }
                         @if (Model.Clients.Any())
                         {
+                            <!-- 如果存在客户端信息，则显示客户端列表 -->
                             <dt>Clients</dt>
                             <dd>
                             @{
@@ -58,7 +63,3 @@
         </div>
     </div>
 </div>
-
-
-
-
